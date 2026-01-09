@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Age Calculator</title>
+<style>
+body {
+ display: flex;
+ justify-content: space-between;
+ font-family: Arial, sans-serif;
+}
+.container {
+ width: 45%;
+}
+.results-container {
+ width: 50%;
+ padding-left: 20px;
+ border-left: 2px solid #ccc;
+}
+.tree { list-style-type: none; padding-left: 20px; }
+.tree li { margin: 5px 0; }
+.category-label { font-weight: bold; color: #00796b; }
+.category-result { margin-left: 10px; color: #333; font-style: italic; }
+.category-result.combined { color: blue; font-weight: bold; }
+.years-result { color: green; font-weight: bold; }
+.final-interpretation { color: red; font-weight: bold; }
+#signature {
+ position: fixed;
+ bottom: 10px;
+ right: 20px;
+ font-style: italic;
+ font-family: 'Brush Script MT', cursive;
+ color: #555;
+ font-size: 16px;
+}
+#warning {
+ font-style: italic;
+ color: red;
+ margin-left: 5px;
+}
+#info-note {
+ font-size: 13px;
+ color: #666;
+ font-style: italic;
+ margin-top: 5px;
+}
+/* Highlight for entered dates */
+input[type="date"].filled {
+ background-color: yellow;
+}
+
+/* ✅ Tooltip styles for the ℹ️ icon */
+.hover-tooltip-container {
+position: relative;
+display: inline-block;
+font-size: 14px;
+margin-top: 6px;
+}
+
+.tooltip-hover-icon {
+cursor: help;
+font-weight: bold;
+color: #555;
+margin-left: 4px;
+}
+
+.tooltip-hover-text {
+visibility: hidden;
+width: 320px;
+background-color: #f9f9f9;
+color: #333;
+text-align: left;
+border-radius: 5px;
+border: 1px solid #ccc;
+padding: 10px;
+position: absolute;
+z-index: 999;
+top: 22px;
+left: 0;
+font-size: 13px;
+box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.hover-tooltip-container:hover .tooltip-hover-text {
+visibility: visible;
+}
+
+/* Button styling */
+.calculate-btn {
+background-color: #90ee90; /* light green */
+border: none;
+padding: 8px 14px;
+cursor: pointer;
+}
+
+.refresh-btn {
+background-color: #ffa500; /* orange */
+border: none;
+padding: 8px 14px;
+cursor: pointer;
+}
+
+.calculate-btn:hover,
+.refresh-btn:hover {
+opacity: 0.85;
+}
+
+</style>
+</head>
+<body>
+
+<div style="position: fixed; top: 12px; right: 16px; font-size: 13px; z-index: 1000;">
+<a href="./Age_Calculation_Logic.pdf" target="_blank">
+Age Calculation Logic?
+</a>
+</div>
+
+<div class="container">
+ <h2>Age Calculator</h2>
+
+ <label for="birthdate1">Birth Date (Range 1):</label>
+ <input type="date" id="birthdate1">
+ <label for="birthdate2">Birth Date (Range 2):</label>
+ <input type="date" id="birthdate2">
+ 
+<div class="hover-tooltip-container">
+<span class="tooltip-hover-icon">ℹ️</span>
+<div class="tooltip-hover-text">
+<b>Examples:</b><br>
+1. DOB: 2024 → enter partial dates as <i>1/JAN/2024</i> & <i>31/DEC/2024</i><br>
+2. DOB: JAN-2024 → enter partial dates as <i>1/JAN/2024</i> & <i>31/JAN/2024</i>
+</div>
+</div>
+
+ <h3>Age Calculation For:</h3>
+
+ <h4>Earliest Onset Date</h4>
+ <label for="onsetDate">Earliest Onset Date:</label>
+ <input type="date" id="onsetDate"><br>
+ <label for="onsetDate1">Earliest Onset Date (Partial Date 1):</label>
+ <input type="date" id="onsetDate1"><br>
+ <label for="onsetDate2">Earliest Onset Date (Partial Date 2):</label>
+ <input type="date" id="onsetDate2"><br>
+
+ <h4>OLU Date</h4><label for="oluDate">OLU Date:</label>
+ <input type="date" id="oluDate"><br>
+ <label for="oluDate1">OLU Date (Partial Date 1):</label>
+ <input type="date" id="oluDate1"><br>
+ <label for="oluDate2">OLU Date (Partial Date 2):</label>
+ <input type="date" id="oluDate2"><br>
+
+ <h4>Date of Death</h4>
+ <label for="deathDate">Date of Death:</label>
+ <input type="date" id="deathDate"><br>
+ <label for="deathDate1">Date of Death (Partial Date 1):</label>
+ <input type="date" id="deathDate1"><br>
+ <label for="deathDate2">Date of Death (Partial Date 2):</label>
+ <input type="date" id="deathDate2"><br>
+
+ <h4>Therapy Start Date</h4>
+ <label for="therapyDate">Therapy Start Date:</label>
+ <input type="date" id="therapyDate"><br>
+ <label for="therapyDate1">Therapy Start Date (Partial Date 1):</label>
+ <input type="date" id="therapyDate1"><br>
+ <label for="therapyDate2">Therapy Start Date (Partial Date 2):</label>
+ <input type="date" id="therapyDate2"><br>
+
+ <h4>Latest Received Date</h4>
+ <label for="latestReceivedDate">Latest Received Date:</label>
+ <input type="date" id="latestReceivedDate"><br><br>
+
+<button class="calculate-btn" onclick="if(validateTherapyAndLRD()) calculateAges()">Calculate Age</button>
+<button class="refresh-btn" onclick="resetForm()">Refresh</button>
+</div>
+
+<div class="results-container">
+ <h3>
+Results:
+<label style="font-size: 14px; margin-left: 10px;">
+<input type="checkbox" checked style="transform: scale(1.2); margin-right: 5px;" />
+Manual
+<span style="position: relative; cursor: pointer;">
+<span title="The Manual checkbox must be ticked whenever manually entering the ‘Age’ or ‘Age group’"
+style="margin-left: 5px; color: #00796b; font-weight: bold;">ℹ️</span>
+</span>
+</label>
+</h3>
+<ul id="resultsTree" class="tree"></ul>
+</div>
+
+<div id="signature">Designed by Shirley Amreen</div>
+
+<script>
+function validateTherapyAndLRD() {
+const therapy = document.getElementById("therapyDate").value;
+const lrd = document.getElementById("latestReceivedDate").value;
+
+if ((therapy && !lrd) || (!therapy && lrd)) {
+alert("Please enter both Therapy Start Date and Latest Received Date for age calculation.");
+return false;
+}
+return true;
+}
+
+function resetForm() {
+document.querySelectorAll('input[type="date"]').forEach(input => {
+input.value = "";
+input.classList.remove("filled");
+});
+document.getElementById("resultsTree").innerHTML = "";
+}
+
+function calculateAge(birthdate, specificdate) {
+ if (!birthdate || !specificdate) return null;
+
+ let birth = new Date(birthdate);
+ let specific = new Date(specificdate);
+
+ if (specific > new Date()) {
+ return { age: "Invalid date (future date entered)", ageGroup: "", decade: "" };
+ }
+
+ /* ---- GOOGLE STYLE CALENDAR DIFF ---- */
+ let years = specific.getFullYear() - birth.getFullYear();
+ let months = specific.getMonth() - birth.getMonth();
+ let days = specific.getDate() - birth.getDate();
+
+ if (days < 0) {
+ months--;
+ const prevMonth = new Date(specific.getFullYear(), specific.getMonth(), 0);
+ days += prevMonth.getDate();
+ }
+
+ if (months < 0) {
+ years--;
+ months += 12;
+ }
+
+ /* ---- Needed for Age Group ---- */
+ let diffMs = specific - birth;
+ let totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+ let weeks = Math.floor(totalDays / 7);
+
+ /* ---- Neonate (Google-aligned) ---- */
+ if (years === 0 && months === 0 && days < 28) {
+ return {
+ age: `<span class="years-result">0 years</span>, 0 months, ${days} days`,
+ ageGroup: "Neonate",
+ decade: "1 decade"
+ };
+ }
+
+ /* ---- Final Google output ---- */
+ return {
+ age: `<span class="years-result">${years} years</span>, ${months} months, ${days} days`,
+ ageGroup: getAgeGroup(weeks, years, months),
+ decade: getDecade(years)
+ };
+}
+
+function getAgeGroup(weeks, years, months) {
+ if (weeks < 4) return "Neonate";
+ if (weeks >= 4 && (years < 2 || (years === 1 && months < 12))) return "Infant";
+ if (years >= 2 && years < 12) return "Child";
+ if (years >= 12 && years < 18) return "Adolescent";
+ if (years >= 18 && years < 65) return "Adult";
+ if (years >= 65) return "Elderly";
+ return "Unknown";
+}
+
+function getDecade(years) {
+ let decade = Math.floor(years / 10) + 1;
+ return decade + " decade";
+}
+
+function calculateAges() {
+ let resultsTree = document.getElementById("resultsTree");
+ resultsTree.innerHTML = "";
+ let combinedAgeGroups = new Set();
+ let combinedDecades = new Set();
+
+ let birthdate1 = document.getElementById("birthdate1").value;
+ let birthdate2 = document.getElementById("birthdate2").value;
+
+ let categories = [
+ { label: "OLU Date", dates: ["oluDate", "oluDate1", "oluDate2"] },
+ { label: "Therapy Start Date", dates: ["therapyDate", "therapyDate1", "therapyDate2"] },
+ { label: "Earliest Onset Date", dates: ["onsetDate", "onsetDate1", "onsetDate2"] },
+ { label: "Date of Death", dates: ["deathDate", "deathDate1", "deathDate2"] },
+ { label: "Latest Received Date", dates: ["latestReceivedDate"] }
+ ];
+
+ categories.forEach(cat => {
+ let ul = document.createElement("ul");
+ let li = document.createElement("li");
+ li.innerHTML = `<b>${cat.label}:</b>`;
+
+ cat.dates.forEach(dateId => {
+ let inputDate = document.getElementById(dateId).value;
+ if (inputDate) {
+ [birthdate1, birthdate2].forEach((bd, index) => {
+ if (bd) {
+ let result = calculateAge(bd, inputDate);
+ if (result) {
+ let label = index === 0 ? "Birth Date (Range 1)" : "Birth Date (Range 2)";
+ combinedAgeGroups.add(result.ageGroup);
+ combinedDecades.add(result.decade);
+ ul.innerHTML += `<li><b>${label}:</b> ${result.age} (${result.ageGroup}, ${result.decade})</li>`;
+ }
+ }
+ });
+ }
+ });
+
+ if (ul.innerHTML !== "") {
+ li.appendChild(ul);
+ resultsTree.appendChild(li);
+ }
+ });
+
+ if (combinedAgeGroups.size || combinedDecades.size) {
+ resultsTree.innerHTML += `<li><b>Combined Result:</b> <span class="category-result combined">Age Groups: ${[...combinedAgeGroups].join(", ")}, Decades: ${[...combinedDecades].join(", ")}</span></li>`;
+
+ let finalInterpretation = "Unknown";
+let warningNote = "";
+
+// Set final interpretation if only one Age Group, regardless of decades
+if (combinedAgeGroups.size === 1) {
+finalInterpretation = [...combinedAgeGroups][0];
+}
+
+// Define problematic decades
+const problematicDecades = ["1 decade", "2 decade", "7 decade"];
+const combinedDecadesArray = [...combinedDecades];
+const containsProblematicDecade = combinedDecadesArray.some(dec => problematicDecades.includes(dec));
+const hasMultipleDecades = combinedDecadesArray.length > 1;
+
+// Rule 1: Decade-based warning (decades that may span 2 age groups)
+if (combinedAgeGroups.size > 1 || containsProblematicDecade) {
+warningNote = `<span id="warning">(if decade falls in two age groups leave age as blank and specify in narrative.)</span>`;
+}
+
+// Rule 2: Age group across multiple decades (even safe ones like 3 & 4, 6 & 7)
+else if (combinedAgeGroups.size === 1 && hasMultipleDecades) {
+warningNote = `<span id="warning">(if age group falls in two decades, leave age as blank and specify in narrative)</span>`;
+}
+
+// Display result
+resultsTree.innerHTML += `<li><b>Final Interpretation:</b> <span class="final-interpretation">${finalInterpretation}</span> ${warningNote}</li>`;
+ }
+}
+
+// Highlight yellow when a date is entered
+document.querySelectorAll('input[type="date"]').forEach(input => {
+ input.addEventListener('input', () => {
+ if (input.value) {
+ input.classList.add('filled');
+ } else {
+ input.classList.remove('filled');
+ }
+ });
+});
+</script>
+</body>
+</html>
