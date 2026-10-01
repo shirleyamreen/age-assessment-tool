@@ -138,7 +138,7 @@ Age Calculation Guide?
 <h4>
 Earliest Onset Date
 <span style="font-size:13px; color:#555; font-style:italic;">
-(If not direct consider key words- Recently/earlier this year/this year/last year/last month/this month/couple of months ago /few days ago/few weeks ago/several weeks ago)
+(keywords- Recently/earlier this year/this year/last year/last month/this month/couple of months ago /few days ago/few weeks ago/several weeks ago)
 </span>
 </h4>
  <label for="onsetDate">Earliest Onset Date:</label>
@@ -151,7 +151,7 @@ Earliest Onset Date
 <h4>
 OLU Date
 <span style="font-size:13px; color:#555; font-style:italic;">
-(If not direct consider key words- Off label frequency/dose/dosing regimen/age group/indication/route of administration)
+(keywords- Off label frequency/dose/dosing regimen/age group/indication/route of administration)
 </span>
 </h4>
  <label for="oluDate">OLU Date:</label>
@@ -333,12 +333,14 @@ function calculateAges() {
  if (combinedAgeGroups.size || combinedDecades.size) {
  resultsTree.innerHTML += `<li><b>Combined Result:</b> <span class="category-result combined">Age Groups: ${[...combinedAgeGroups].join(", ")}, Decades: ${[...combinedDecades].join(", ")}</span></li>`;
 
- let finalInterpretation = "Unknown";
+let finalInterpretation = "Unknown";
 let warningNote = "";
 
-// Set final interpretation if only one Age Group, regardless of decades
+// If there is only one Age Group OR only one Decade
 if (combinedAgeGroups.size === 1) {
-finalInterpretation = [...combinedAgeGroups][0];
+    finalInterpretation = [...combinedAgeGroups][0];
+} else if (combinedDecades.size === 1) {
+    finalInterpretation = [...combinedDecades][0];
 }
 
 // Define problematic decades
@@ -347,16 +349,20 @@ const combinedDecadesArray = [...combinedDecades];
 const containsProblematicDecade = combinedDecadesArray.some(dec => problematicDecades.includes(dec));
 const hasMultipleDecades = combinedDecadesArray.length > 1;
 
-// Rule 1: Decade-based warning (decades that may span 2 age groups)
-if (combinedAgeGroups.size > 1 || containsProblematicDecade) {
-warningNote = `<span id="warning">(if decade falls in two age groups leave age as blank and specify in narrative.)</span>`;
+// Rule 1: Single decade but multiple age groups
+if (combinedAgeGroups.size > 1 && !hasMultipleDecades) {
+warningNote = `<span id="warning">(New Update - If the age falls within a single decade but corresponds to multiple age groups, enter the age in decades and retain the system-calculated age group.)</span>`;
 }
-
-// Rule 2: Age group across multiple decades (even safe ones like 3 & 4, 6 & 7)
+ 
+// Rule 2: Multiple decades and multiple age groups
+else if (combinedAgeGroups.size > 1 && hasMultipleDecades) {
+warningNote = `<span id="warning">(If the age falls across two decades and corresponds to multiple age groups, leave the Age and Age Group fields blank and specify the age details in the narrative.)</span>`;
+}
+ 
+// Rule 3: Single age group but multiple decades
 else if (combinedAgeGroups.size === 1 && hasMultipleDecades) {
-warningNote = `<span id="warning">(if age group falls in two decades, leave age as blank and specify in narrative)</span>`;
+warningNote = `<span id="warning">(If the age falls across two decades and corresponds to a single age group, leave the Age field blank and specify the age details in the narrative)</span>`;
 }
-
 // Display result
 resultsTree.innerHTML += `<li><b>Final Interpretation:</b> <span class="final-interpretation">${finalInterpretation}</span> ${warningNote}</li>`;
  }
@@ -374,8 +380,4 @@ document.querySelectorAll('input[type="date"]').forEach(input => {
 });
 </script>
 </body>
-
 </html>
-
-
-
